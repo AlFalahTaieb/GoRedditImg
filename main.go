@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 
 	"github.com/AlFalahTaieb/GoRedditImg/structs"
@@ -19,8 +20,7 @@ func parseSubreddits(subreddits <-chan string, fileExtToDownload map[string]bool
 	client := &http.Client{}
 	for subreddit := range subreddits {
 		log.Printf("Parsing %s", subreddit)
-
-		req, err := http.NewRequest("GET", fmt.Sprintf("http://www.reddit.com/r/%s/top.json?limit=100", subreddit), nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf("http://www.reddit.com/r/%s.json?limit=100", subreddit), nil)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -37,11 +37,23 @@ func parseSubreddits(subreddits <-chan string, fileExtToDownload map[string]bool
 			url, _, _, _ := jsonparser.Get(value, "data", "url")
 			author, _, _, _ := jsonparser.Get(value, "data", "author")
 			formatedAuthor := html.UnescapeString(string(author))
+			ext := "gifv"
+
 			formatedURL := html.UnescapeString(string(url))
-			_, filename := filepath.Split(formatedURL)
-			if fileExtToDownload[filepath.Ext(filename)] {
-				wg.Add(1)
-				files <- structs.DownloadFile{Filename: formatedAuthor + "_" + filename, Folder: subreddit, URL: formatedURL}
+			if formatedURL[len(formatedURL)-4:] == ext {
+				newFormated := strings.ReplaceAll(formatedURL, ".gifv", ".mp4")
+				_, filename := filepath.Split(newFormated)
+				if fileExtToDownload[filepath.Ext(filename)] {
+					wg.Add(1)
+					files <- structs.DownloadFile{Filename: formatedAuthor + "_" + filename, Folder: subreddit, URL: formatedURL}
+				}
+
+			} else {
+				_, filename := filepath.Split(formatedURL)
+				if fileExtToDownload[filepath.Ext(filename)] {
+					wg.Add(1)
+					files <- structs.DownloadFile{Filename: formatedAuthor + "_" + filename, Folder: subreddit, URL: formatedURL}
+				}
 			}
 		}, "data", "children")
 
