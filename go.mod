@@ -1,4 +1,4 @@
-module github.com/amscotti/reddit_image_downloader
+module github.com/AlFalahTaieb/GoRedditImg
 
 go 1.17
 
