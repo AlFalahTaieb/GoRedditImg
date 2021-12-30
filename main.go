@@ -45,7 +45,7 @@ func parseSubreddits(subreddits <-chan string, fileExtToDownload map[string]bool
 				_, filename := filepath.Split(newFormated)
 				if fileExtToDownload[filepath.Ext(filename)] {
 					wg.Add(1)
-					files <- structs.DownloadFile{Filename: formatedAuthor + "_" + filename, Folder: subreddit, URL: formatedURL}
+					files <- structs.DownloadFile{Filename: formatedAuthor + "_" + filename, Folder: subreddit, URL: newFormated}
 				}
 
 			} else {
